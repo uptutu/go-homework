@@ -29,6 +29,7 @@ func main() {
 	os.Exit(0)
 }
 
+/* Test */
 type users struct {
 	Users []user `json:"users`
 }
