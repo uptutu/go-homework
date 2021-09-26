@@ -27,7 +27,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        run: Checking
+        run: echo "Checking"
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v2.5.2
