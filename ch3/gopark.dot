@@ -1,0 +1,11 @@
+digraph gopark {
+    checkgpstatus [label="check current G status is running"]
+    acquirem -> checkgpstatus
+    throw [color="red", label="gopark:bad g status"]
+    checkgpstatus -> throw [label="true"]
+    saveTheInfoToCurM [label="save some info about this parking(waitting) G"]
+    checkgpstatus-> saveTheInfoToCurM [label="false"]
+    mcall [label=" switches from the g to the g0 stack and invokes fn(park_m),"]
+    saveTheInfoToCurM -> mcall
+    park_m [color="yellow", label="park continuation on g0"]
+}

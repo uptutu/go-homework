@@ -1,0 +1,50 @@
+digraph chansend1 {
+    chansend1 [shape=box];
+    chansend [shape=box,label="chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr)"];
+    cIsNil [shape=triangle,label="if c == nil"]
+    throw [color=red,label="throw(\"unreachable\")"]
+    goparkAndNounlockFn [color=aqua, label="park current G and here is no unlock func aware this G"]
+    checkNonblocking [shape=triangle,label="!block && !c.closed && c.isFull"]
+    lock [shape=box, label="lock(&c.lock)"]
+    isChanClosed [shape=triangle, label="c.closed != 0"]
+    closedPanic [color=red, label="Panic:send on closed channel"]
+    recvqDequeue [shape=triangle, label="dequeue from recvq, have goroutine is watting?"]
+    runRecvq [label="get waitting goroutine and run it"]
+    checkChanIsFull [shape="triangle", label="is c.count < c.datasiz"]
+    isBlockingRequir [shape="triangle", label="is blocking requir"]
+    return_false [color=yellow, label="return false"]
+    return [color=yellow, label="return true"]
+    isBlock [shape="triangle", label="!block"]
+
+
+    chansend1 -> chansend
+    chansend -> cIsNil
+    cIsNil -> isBlock
+    isBlock -> return_false [label="true"]
+    isBlock -> goparkAndNounlockFn [label="false"]
+    goparkAndNounlockFn -> throw
+    cIsNil -> checkNonblocking [label="false"]
+    checkNonblocking -> return_false [label="true"]
+    checkNonblocking -> lock [label="false"]
+    lock -> isChanClosed
+    isChanClosed -> closedPanic [label="true"]
+    isChanClosed-> recvqDequeue[label="false"]
+    recvqDequeue -> runRecvq [label="true"]
+    runRecvq -> return
+    recvqDequeue-> checkChanIsFull [label="false"]
+    typedmemmove[label="typedmemmove \n save this elem to Channel.buf"]
+    checkChanIsFull -> typedmemmove [label="true"]
+    typedmemmove -> return
+    checkChanIsFull -> isBlockingRequir [label="false"]
+    isBlockingRequir -> return_false [label="true"]
+    isBlockingRequir -> blocking [label="false"]
+
+    getg [label="get current g"]
+    blocking -> getg
+    acquireSudog [label="acquire g"]
+    getg->acquireSudog
+    saveGContextAndEnqueueToC[label="save current g context and enqueue to channel's sendq"]
+    acquireSudog->saveGContextAndEnqueueToC
+    gopark [color=aqua, label="gopark(unlockfun:chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanSend, traceEvGoBlockSend, 2)"]
+    saveGContextAndEnqueueToC -> gopark
+}
